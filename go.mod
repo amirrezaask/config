@@ -1,4 +1,4 @@
-module github.com/amirrezaask/athena
+module github.com/amirrezaask/config
 
 go 1.13
 
