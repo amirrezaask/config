@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/pkg/errors"
 )
 
 //Get is a proxy to C().Get
@@ -29,7 +28,7 @@ func (c *Map) Set(key, value string) {
 	(*c)[key] = value
 }
 
-var config *Map
+var config = &Map{}
 
 //C gets the global config object
 func C() Map {
@@ -46,10 +45,11 @@ func (c Map) PrettyPrint() string {
 }
 
 //Init initialize config
-func Init()error{
+func init() {
 	env, err := godotenv.Read(".env")
 	if err != nil {
-		return errors.Wrap(err, "error in loading env file")
+		fmt.Fprintf(os.Stderr, "error in reading env file :%v",err)
+		os.Exit(1)
 	}
 	config = &Map{}
 	for k, _ := range env {
@@ -60,5 +60,4 @@ func Init()error{
 		config.Set(strings.ToLower(k), env[k])
 	}
 	Get = config.Get
-	return nil
 }
