@@ -2,6 +2,7 @@ package athena
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -9,52 +10,44 @@ import (
 	"github.com/pkg/errors"
 )
 
-//Get is a proxy to C().Get
-var Get func(key string) string
+//Cfg is a placeholder for config
+type Cfg struct {
+	m map[string]string
+}
 
-//Map represnets config
-type Map map[string]string
-
-//Get gets a key from config map
-func (c Map) Get(key string) string {
-	val, exists := (c)[key]
+func (c *Cfg) Get(key string) string {
+	val, exists := (c.m)[key]
 	if !exists {
 		return ""
 	}
 	return val
 }
-
-//Set sets a key config
-func (c *Map) Set(key, value string) {
-	(*c)[key] = value
-}
-
-var config *Map
-
-//C gets the global config object
-func C() Map {
-	return *config
+func (c *Cfg) Set(key string, val string) {
+	c.m[key] = val
 }
 
 //PrettyPrint prints pretty
-func (c Map) PrettyPrint() string {
+func (c *Cfg) PrettyPrint() string {
 	output := "Key => Value\n"
-	for k, v := range c {
+	for k, v := range c.m {
 		output += fmt.Sprintf("'%s' = '%s'\n", k, v)
 	}
 	return output
 }
 
 //Init initialize config
-func Init(envsToRead []string) {
-	err := godotenv.Load()
+func Init(r io.Reader) *Cfg {
+	dotEnv, err := godotenv.Parse(r)
 	if err != nil {
 		fmt.Fprint(os.Stderr, errors.Wrap(err, "error in loading env file").Error())
 	}
-	config = &Map{}
-	for _, e := range envsToRead {
-		v := os.Getenv(strings.ToUpper(e))
-		config.Set(strings.ToLower(e), v)
+	for k, _ := range dotEnv {
+		env := os.Getenv(strings.ToUpper(k))
+		if env != "" {
+			dotEnv[k] = env
+		}
 	}
-	Get = config.Get
+	return &Cfg{
+		dotEnv,
+	}
 }
