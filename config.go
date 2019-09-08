@@ -46,15 +46,19 @@ func (c Map) PrettyPrint() string {
 }
 
 //Init initialize config
-func Init(envsToRead []string) {
-	err := godotenv.Load()
+func Init()error{
+	env, err := godotenv.Read(".env")
 	if err != nil {
-		fmt.Fprint(os.Stderr, errors.Wrap(err, "error in loading env file").Error())
+		return errors.Wrap(err, "error in loading env file")
 	}
 	config = &Map{}
-	for _, e := range envsToRead {
-		v := os.Getenv(strings.ToUpper(e))
-		config.Set(strings.ToLower(e), v)
+	for k, _ := range env {
+		v := os.Getenv(strings.ToUpper(k))
+		if v != "" {
+			env[k] = v
+		}
+		config.Set(strings.ToLower(k), env[k])
 	}
 	Get = config.Get
+	return nil
 }
