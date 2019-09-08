@@ -45,7 +45,7 @@ func (c Map) PrettyPrint() string {
 }
 
 //Init initialize config
-func init() {
+func Init() {
 	env, err := godotenv.Read(".env")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error in reading env file :%v",err)
