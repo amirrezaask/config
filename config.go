@@ -1,4 +1,4 @@
-package athena
+package config
 
 import (
 	"fmt"
