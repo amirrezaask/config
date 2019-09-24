@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
-
-	"github.com/joho/godotenv"
 )
 
 //Get is a proxy to C().Get
@@ -44,13 +43,24 @@ func (c Map) PrettyPrint() string {
 	return output
 }
 
+func envParser(lines []string) map[string]string {
+	env := make(map[string]string)
+	for _, line := range lines {
+		tempLineSplitted := strings.Split(line, "=")
+		env[tempLineSplitted[0]] = tempLineSplitted[1]
+	}
+	return env
+}
+
 //Init initialize config
 func Init() {
-	env, err := godotenv.Read(".env")
+	envBytes, err := ioutil.ReadFile(".env")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error in reading env file :%v",err)
+		fmt.Fprintf(os.Stdout, "erorr in reading env file: %v", err)
 		os.Exit(1)
 	}
+	envLines := strings.Split(string(envBytes), "\n")
+	env := envParser(envLines)
 	config = &Map{}
 	for k, _ := range env {
 		v := os.Getenv(strings.ToUpper(k))
@@ -59,5 +69,10 @@ func Init() {
 		}
 		config.Set(strings.ToLower(k), env[k])
 	}
+	fmt.Println(config)
 	Get = config.Get
+}
+
+func main() {
+	Init()
 }
